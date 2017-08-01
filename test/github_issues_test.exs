@@ -1,4 +1,4 @@
-defmodule IssuesTest do
+defmodule GithubIssuesTest do
   use ExUnit.Case
 
   test "issues url returns a github api url with user and project" do
