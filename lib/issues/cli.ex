@@ -2,13 +2,7 @@ defmodule Issues.CLI do
   
   @default_count 4
 
-  @module_doc """
-
-    Handle the command line parsing and the dispatch to
-    the various functions that end up generating a
-    table of the last _n_ issues in a github project
-
-  """
+  import Issues.TableFormatter, only: [ print_table_for_columns: 2 ]
 
   def run(argv) do
     argv
@@ -23,11 +17,13 @@ defmodule Issues.CLI do
     System.halt(0)
   end
 
-  def process({user, project, _count}) do
+  def process({user, project, count}) do
     Issues.GithubIssues.fetch(user, project)
     |> decode_response
-    |> convert_to_list_of_hashdicts
+    |> convert_to_map
     |> sort_into_ascending_order
+    |> Enum.take(count)
+    |> print_table_for_columns(["number", "created_at", "title"])
   end
 
   def decode_response({:ok, body}) do
@@ -40,22 +36,15 @@ defmodule Issues.CLI do
     System.halt(2)
   end
 
-  def convert_to_list_of_hashdicts(list) do
+  def convert_to_map(list) do
     list
-    |> Enum.map(&Enum.into(&1, HashDict.new))
+    |> Enum.map(&Enum.into(&1, Map.new))
   end
 
   def sort_into_ascending_order(list_of_issues) do
     Enum.sort list_of_issues,
       fn i1, i2 -> i1["created_at"] <= i2["created_at"] end
   end
-
-  @doc """
-    `argv` can be -h or --help, which returns :help.
-    Otherwise it is a github user name, project name, and (optionally)
-    the number of entries to format.
-    Return a tuple of `{ user, project, count }`, or `:help` if help was given.
-  """
 
   def parse_args(argv) do
     parse = OptionParser.parse(argv, switches: [help: :boolean], aliases: [h: :help])
