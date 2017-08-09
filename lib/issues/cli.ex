@@ -4,6 +4,12 @@ defmodule Issues.CLI do
 
   import Issues.TableFormatter, only: [ print_table_for_columns: 2 ]
 
+  def main(argv) do
+    argv
+    |> parse_args
+    |> process
+  end
+
   def run(argv) do
     argv
       |> parse_args
